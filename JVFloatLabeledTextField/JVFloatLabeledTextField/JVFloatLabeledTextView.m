@@ -61,7 +61,7 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     self = [super initWithCoder:aDecoder];
     if (self) {
         [self commonInit];
-
+        
         // force setter to be called on a placeholder defined in a NIB/Storyboard
         if (self.placeholder) {
             self.placeholder = self.placeholder;
@@ -90,20 +90,26 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     _placeholderLabel.textColor = _placeholderTextColor;
     [self insertSubview:_placeholderLabel atIndex:0];
     
+    _floatingLabelContainerView = [UIView new];
+    _floatingLabelContainerView.alpha = 0.0f;
+    _floatingLabelContainerView.backgroundColor = self.backgroundColor;
+    [self addSubview:_floatingLabelContainerView];
+    
     _floatingLabel = [UILabel new];
     _floatingLabel.alpha = 0.0f;
     _floatingLabel.backgroundColor = self.backgroundColor;
-    [self addSubview:_floatingLabel];
-	
+    [self->_floatingLabelContainerView addSubview:_floatingLabel];
+    
     // some basic default fonts/colors
     _floatingLabelFont = [self defaultFloatingLabelFont];
     _floatingLabel.font = _floatingLabelFont;
     _floatingLabelTextColor = [UIColor grayColor];
     _floatingLabel.textColor = _floatingLabelTextColor;
+    
     _animateEvenIfNotFirstResponder = NO;
     _floatingLabelShowAnimationDuration = kFloatingLabelShowAnimationDuration;
     _floatingLabelHideAnimationDuration = kFloatingLabelHideAnimationDuration;
-
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(layoutSubviews)
                                                  name:UITextViewTextDidChangeNotification
@@ -154,6 +160,10 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     _floatingLabel.text = placeholder;
     
     if (0 != self.floatingLabelShouldLockToTop) {
+        _floatingLabelContainerView.frame = CGRectMake(_floatingLabelContainerView.frame.origin.x,
+                                                       _floatingLabelContainerView.frame.origin.y,
+                                                       self.frame.size.width,
+                                                       _floatingLabelContainerView.frame.size.height);
         _floatingLabel.frame = CGRectMake(_floatingLabel.frame.origin.x,
                                           _floatingLabel.frame.origin.y,
                                           self.frame.size.width,
@@ -180,9 +190,10 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     CGSize floatingLabelSize = [_floatingLabel sizeThatFits:_floatingLabel.superview.bounds.size];
     
     _floatingLabel.frame = CGRectMake(_floatingLabel.frame.origin.x,
-                                      _floatingLabel.frame.origin.y,
+                                      self->_floatingLabelYPadding,
                                       self.frame.size.width,
                                       floatingLabelSize.height);
+    _floatingLabelContainerView.frame = CGRectMake(_floatingLabelContainerView.frame.origin.x, _floatingLabelContainerView.frame.origin.y, self.frame.size.width, floatingLabelSize.height + _floatingLabelYPadding);
     
     CGSize placeholderLabelSize = [_placeholderLabel sizeThatFits:_placeholderLabel.superview.bounds.size];
     
@@ -214,12 +225,12 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
 - (CGSize)intrinsicContentSize
 {
     CGSize textFieldIntrinsicContentSize = [super intrinsicContentSize];
-
+    
     if (self.text != nil && self.text.length > 0) {
         return textFieldIntrinsicContentSize;
     } else {
         CGFloat additionalHeight = _placeholderLabel.bounds.size.height - (_floatingLabel.bounds.size.height + _floatingLabelYPadding);
-
+        
         return CGSizeMake(textFieldIntrinsicContentSize.width,
                           textFieldIntrinsicContentSize.height + additionalHeight);
     }
@@ -246,14 +257,19 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
 {
     void (^showBlock)(void) = ^{
         self->_floatingLabel.alpha = 1.0f;
-        CGFloat top = self->_floatingLabelYPadding;
+        CGFloat top = 0;
         if (0 != self.floatingLabelShouldLockToTop) {
             top += self.contentOffset.y;
         }
         self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
-                                          top,
-                                          self->_floatingLabel.frame.size.width,
-                                          self->_floatingLabel.frame.size.height);
+                                                self->_floatingLabelYPadding,
+                                                self->_floatingLabel.frame.size.width,
+                                                self->_floatingLabel.frame.size.height);
+        self->_floatingLabelContainerView.alpha = 1.0f;
+        self->_floatingLabelContainerView.frame = CGRectMake(self->_floatingLabelContainerView.frame.origin.x,
+                                                             top,
+                                                             self->_floatingLabelContainerView.frame.size.width,
+                                                             self->_floatingLabelContainerView.frame.size.height);
     };
     
     if ((animated || 0 != _animateEvenIfNotFirstResponder)
@@ -274,9 +290,14 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     void (^hideBlock)(void) = ^{
         self->_floatingLabel.alpha = 0.0f;
         self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
-                                          self->_floatingLabel.font.lineHeight + self->_placeholderYPadding,
-                                          self->_floatingLabel.frame.size.width,
-                                          self->_floatingLabel.frame.size.height);
+                                                self->_floatingLabelYPadding,
+                                                self->_floatingLabel.frame.size.width,
+                                                self->_floatingLabel.frame.size.height);
+        self->_floatingLabelContainerView.alpha = 0.0f;
+        self->_floatingLabelContainerView.frame = CGRectMake(self->_floatingLabelContainerView.frame.origin.x,
+                                                             self->_floatingLabel.font.lineHeight + self->_placeholderYPadding,
+                                                             self->_floatingLabelContainerView.frame.size.width,
+                                                             self->_floatingLabelContainerView.frame.size.height);
         
     };
     
@@ -326,6 +347,8 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     
     _floatingLabel.frame = CGRectMake(floatingLabelOriginX + _floatingLabelXPadding, _floatingLabel.frame.origin.y,
                                       _floatingLabel.frame.size.width, _floatingLabel.frame.size.height);
+    _floatingLabelContainerView.frame = CGRectMake(_floatingLabelContainerView.frame.origin.x, _floatingLabelContainerView.frame.origin.y,
+                                      _floatingLabelContainerView.frame.size.width, _floatingLabelContainerView.frame.size.height);
     
     _placeholderLabel.frame = CGRectMake(placeholderLabelOriginX + _placeholderXPadding, _placeholderLabel.frame.origin.y,
                                          _placeholderLabel.frame.size.width, _placeholderLabel.frame.size.height);
@@ -390,6 +413,7 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     
     if (0 != self.floatingLabelShouldLockToTop) {
         _floatingLabel.backgroundColor = self.backgroundColor;
+        _floatingLabelContainerView.backgroundColor = self.backgroundColor;
     }
 }
 

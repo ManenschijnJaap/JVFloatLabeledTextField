@@ -59,6 +59,11 @@ IB_DESIGNABLE
 @property (nonatomic, strong, readonly) UILabel * floatingLabel;
 
 /**
+* Read-only access to the floating label container view.
+*/
+@property (nonatomic, strong, readonly) UIView * floatingLabelContainerView;
+
+/**
  * Padding to be applied to the y coordinate of the floating label upon presentation.
  */
 @property (nonatomic) IBInspectable CGFloat floatingLabelYPadding;
@@ -79,14 +84,14 @@ IB_DESIGNABLE
 @property (nonatomic) IBInspectable CGFloat placeholderXPadding;
 
 /**
- * Font to be applied to the floating label. Defaults to `[UIFont boldSystemFontOfSize:12.0f]`. 
+ * Font to be applied to the floating label. Defaults to `[UIFont boldSystemFontOfSize:12.0f]`.
  * Provided for the convenience of using as an appearance proxy.
  */
 @property (nonatomic, strong) UIFont * floatingLabelFont;
 
 /**
  * Text color to be applied to the floating label while the text view is not a first responder.
- * Defaults to `[UIColor grayColor]`. 
+ * Defaults to `[UIColor grayColor]`.
  * Provided for the convenience of using as an appearance proxy.
  */
 @property (nonatomic, strong) IBInspectable UIColor * floatingLabelTextColor;
@@ -98,7 +103,7 @@ IB_DESIGNABLE
 @property (nonatomic, strong) IBInspectable UIColor * floatingLabelActiveTextColor;
 
 /**
- * Indicates whether the floating label should lock to the top of the text view, or scroll away with text when the text 
+ * Indicates whether the floating label should lock to the top of the text view, or scroll away with text when the text
  * view is scrollable. By default, floating labels will lock to the top of the text view and their background color will
  * be set to the text view's background color
  * Note that this works best when floating labels have a non-clear background color.
@@ -118,13 +123,13 @@ IB_DESIGNABLE
 @property (nonatomic, assign) IBInspectable BOOL animateEvenIfNotFirstResponder;
 
 /**
- * Duration of the animation when showing the floating label. 
+ * Duration of the animation when showing the floating label.
  * Defaults to 0.3 seconds.
  */
 @property (nonatomic, assign) NSTimeInterval floatingLabelShowAnimationDuration UI_APPEARANCE_SELECTOR;
 
 /**
- * Duration of the animation when hiding the floating label. 
+ * Duration of the animation when hiding the floating label.
  * Defaults to 0.3 seconds.
  */
 @property (nonatomic, assign) NSTimeInterval floatingLabelHideAnimationDuration UI_APPEARANCE_SELECTOR;
